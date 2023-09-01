@@ -1,6 +1,6 @@
 import nltk
 import pandas as pd
-from nltk import WordNetLemmatizer
+from nltk import WordNetLemmatizer, word_tokenize, pos_tag
 from nltk.sentiment import SentimentIntensityAnalyzer
 from nltk.corpus import words, stopwords
 from sklearn.feature_extraction.text import CountVectorizer
@@ -10,6 +10,13 @@ from sklearn.decomposition import LatentDirichletAllocation
 english_vocab = set(w.lower() for w in words.words())
 
 sia = SentimentIntensityAnalyzer()
+
+def extract_opinions(text):
+    """Extract adjectives as potential opinion words."""
+    tokenized = word_tokenize(text)
+    pos_tags = pos_tag(tokenized)
+    opinions = [word for word, tag in pos_tags if tag in ['JJ', 'JJR', 'JJS']]
+    return ', '.join(opinions)
 
 def is_english(text):
     """Checks if the text is primarily in English."""
@@ -98,6 +105,6 @@ if __name__ == "__main__":
         topic_keywords[index] = ", ".join(keywords)
 
     filtered_df['TopicKeywords'] = filtered_df['DominantTopic'].apply(lambda x: topic_keywords[x])
-
+    filtered_df['Opinions'] = filtered_df['ParticipantResponse'].apply(extract_opinions)
     # Export the dataframe to an Excel file
     filtered_df.to_excel('output_filename_with_topics.xlsx', index=False)
